@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Snowflake / CoCo credentials and local state
+connections.toml
+config.toml
+.snowflake/
+.cortex/
+*.p8
+*.pem
+.env
+
+# Large media (link instead of committing)
+*.mp4
+*.mov
+
+# OS / editor
+.DS_Store
+Thumbs.db
+~$*
+.vscode/
