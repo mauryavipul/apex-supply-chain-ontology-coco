@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import json
+import altair as alt
 from snowflake.snowpark.context import get_active_session
 
 # Set Streamlit page config
@@ -10,6 +11,63 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Custom Injected CSS (Card styling & whitelisted status pills)
+st.markdown("""
+<style>
+/* Card-style metric tiles */
+div[data-testid="stMetric"], div[data-testid="metric-container"] {
+    background-color: rgba(128, 128, 128, 0.06);
+    border: 1px solid rgba(128, 128, 128, 0.25);
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Status pills */
+.status-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
+}
+.status-pill-aligned {
+    background-color: #DEF7EC;
+    color: #03543F;
+    border: 1px solid #31C48D;
+}
+.status-pill-drift {
+    background-color: #FDE8E8;
+    color: #9B1C1C;
+    border: 1px solid #F98080;
+}
+.status-pill-illustrative {
+    background-color: #FEF08A;
+    color: #713F12;
+    border: 1px solid #FACC15;
+}
+.status-pill-unknown {
+    background-color: #F3F4F6;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+}
+</style>
+""", unsafe_allow_html=True)
+
+def render_status_pill(status_key: str) -> str:
+    """Return a sanitized HTML status pill for fixed whitelisted status keys only."""
+    k = str(status_key).strip().upper()
+    if k in ("ALIGNED", "HEALTHY", "OK"):
+        return '<span class="status-pill status-pill-aligned">● ALIGNED</span>'
+    elif k in ("DRIFT", "DRIFT_DETECTED", "WARNING", "CRITICAL"):
+        return '<span class="status-pill status-pill-drift">▲ DRIFT</span>'
+    elif k in ("ILLUSTRATIVE", "SIMULATION"):
+        return '<span class="status-pill status-pill-illustrative">⚡ Illustrative</span>'
+    else:
+        return '<span class="status-pill status-pill-unknown">ℹ️ UNKNOWN</span>'
 
 session = get_active_session()
 
@@ -52,6 +110,7 @@ if page == "🎯 1. Command Center":
         reg_cnt_df = session.sql("SELECT COUNT(*) AS CNT FROM SC_ONTOLOGY.GOVERNANCE.METRIC_REGISTRY WHERE IS_ACTIVE = TRUE").to_pandas()
         total_gov_metrics = int(reg_cnt_df.iloc[0]["CNT"]) if not reg_cnt_df.empty else 8
         gov_status = gov_health_df.iloc[0]["STATUS"] if not gov_health_df.empty else "ALIGNED"
+        pill_html = render_status_pill(gov_status)
         st.info(f"🛡️ **Governance Status**: **{total_gov_metrics} metrics governed · 1 drift-monitored (Outbound OTD, Q3 2026 order cohort) · {gov_status}**")
     except Exception as e:
         st.warning(f"Governance status check: {str(e)}")
@@ -117,9 +176,47 @@ if page == "🎯 1. Command Center":
                 PENALTY_EXPOSURE_USD_EST AS "EST_PENALTY_USD"
             FROM SC_ONTOLOGY.APP.V_RISK_SIGNALS
             ORDER BY RISK_SCORE DESC
-            LIMIT 5
+            LIMIT 10
         """).to_pandas()
-        st.dataframe(top_risks_df, use_container_width=True)
+        st.dataframe(top_risks_df.head(5), use_container_width=True)
+
+        if not top_risks_df.empty:
+            chart_df = top_risks_df.copy()
+            chart_df["ENTITY_LABEL"] = chart_df["ENTITY_NAME"] + " (" + chart_df["ENTITY_ID"] + ")"
+            
+            bars = alt.Chart(chart_df).mark_bar(color="#29B5E8").encode(
+                x=alt.X("RISK_SCORE:Q", scale=alt.Scale(domain=[0, 100]), title="Risk Score (0–100 Scale)"),
+                y=alt.Y("ENTITY_LABEL:N", sort="-x", title=None),
+                tooltip=[
+                    alt.Tooltip("ENTITY_ID:N", title="Entity ID"),
+                    alt.Tooltip("ENTITY_NAME:N", title="Entity Name"),
+                    alt.Tooltip("ENTITY_TYPE:N", title="Entity Type"),
+                    alt.Tooltip("RISK_SCORE:Q", title="Risk Score", format=".2f"),
+                    alt.Tooltip("PRIORITY:N", title="Priority")
+                ]
+            )
+            
+            rule_df = pd.DataFrame({"threshold": [40], "label": ["Low band < 40"]})
+            rule = alt.Chart(rule_df).mark_rule(strokeDash=[4, 4], color="#6B7280", strokeWidth=1.5).encode(
+                x="threshold:Q"
+            )
+            rule_text = alt.Chart(rule_df).mark_text(
+                align="left",
+                baseline="bottom",
+                dx=5,
+                dy=-5,
+                color="#6B7280",
+                fontSize=11,
+                fontWeight="bold"
+            ).encode(
+                x="threshold:Q",
+                text="label:N"
+            )
+            
+            st.altair_chart((bars + rule + rule_text).properties(
+                title="Top 10 Risk Exposure Signals",
+                height=280
+            ), use_container_width=True)
 
     with col_right:
         st.subheader("💡 Proposed Recommendations by Issue")
@@ -449,10 +546,12 @@ elif page == "💬 3. Ask":
 # VIEW 4: GOVERN (TABS: Governance Health, Metric Glossary, Ontology & Lineage)
 # ==============================================================================
 elif page == "🛡️ 4. Govern":
+    st.header("🛡️ Metric Governance & Lineage")
+    st.caption("Semantic drift monitoring, canonical metric glossary, and knowledge graph architecture.")
     tab_gov, tab_glo, tab_ont = st.tabs(["🛡️ Governance Health", "📖 Metric Glossary", "🕸️ Ontology & Lineage"])
 
     with tab_gov:
-        st.header("🛡️ Metric Drift Sentinel & Governance Health")
+        st.subheader("🛡️ Metric Drift Sentinel & Governance Health")
         st.markdown("Monitors semantic drift between canonical Curated metrics and legacy department views.")
 
         # Display Flash Message from Session State
@@ -461,6 +560,9 @@ elif page == "🛡️ 4. Govern":
             del st.session_state["drift_flash_msg"]
 
         gov_health_df = session.sql("SELECT * FROM SC_ONTOLOGY.GOVERNANCE.V_GOVERNANCE_HEALTH").to_pandas()
+        if not gov_health_df.empty:
+            g_status = str(gov_health_df.iloc[0]["STATUS"])
+            st.markdown(f"**Current Sentinel Status**: &nbsp; {render_status_pill(g_status)}", unsafe_allow_html=True)
         st.dataframe(gov_health_df, use_container_width=True)
 
         st.caption("Note: Running drift check evaluates consistency and writes exactly one execution record to `SC_ONTOLOGY.APP.CONSISTENCY_LOG`.")
@@ -472,7 +574,7 @@ elif page == "🛡️ 4. Govern":
                 st.rerun()
 
     with tab_glo:
-        st.header("📖 Governed Canonical Metric Glossary")
+        st.subheader("📖 Governed Canonical Metric Glossary")
         st.caption("Loaded dynamically from `SC_ONTOLOGY.GOVERNANCE.METRIC_REGISTRY`.")
         reg_df = session.sql("""
             SELECT 
@@ -700,6 +802,51 @@ elif page == "💡 5. Decide":
                 st.info(f"💡 **Financial Analysis**: Direct intervention costs (\\${proj['INTERVENTION_COST_USD']:,.2f}) exceed penalty avoidance (\\${proj['PENALTY_AVOIDED_USD']:,.2f}). **This scenario does not pay back** on penalty savings alone, but provides +{otd_delta}% service level protection.")
             else:
                 st.success(f"🎉 **Financial Analysis**: Penalty avoidance (\\${proj['PENALTY_AVOIDED_USD']:,.2f}) covers intervention costs (\\${proj['INTERVENTION_COST_USD']:,.2f}). Net positive ROI of \\${abs(net_cost):,.2f}.")
+
+            # Side-by-side What-If Charts
+            c_sim1, c_sim2 = st.columns(2)
+            
+            with c_sim1:
+                df_pct = pd.DataFrame([
+                    {"Metric": "Outbound OTD (%)", "Scenario": "Baseline", "Percentage": float(proj["BASELINE_OTD_PCT"])},
+                    {"Metric": "Outbound OTD (%)", "Scenario": "Projected", "Percentage": float(proj["PROJECTED_OTD_PCT"])},
+                    {"Metric": "Stockout Risk (%)", "Scenario": "Baseline", "Percentage": float(base_stockout_val)},
+                    {"Metric": "Stockout Risk (%)", "Scenario": "Projected", "Percentage": float(proj["PROJECTED_STOCKOUT_RISK_PCT"])}
+                ])
+                
+                # Grouped bars: use xOffset if Altair >= 5, else column facet
+                if hasattr(alt, "XOffset") or hasattr(alt, "xoffset"):
+                    chart_pct = alt.Chart(df_pct).mark_bar().encode(
+                        x=alt.X("Metric:N", title=None),
+                        xOffset=alt.XOffset("Scenario:N", sort=["Baseline", "Projected"]),
+                        y=alt.Y("Percentage:Q", scale=alt.Scale(domain=[0, 100]), title="Rate (%)"),
+                        color=alt.Color("Scenario:N", scale=alt.Scale(domain=["Baseline", "Projected"], range=["#94A3B8", "#29B5E8"])),
+                        tooltip=[alt.Tooltip("Metric:N"), alt.Tooltip("Scenario:N"), alt.Tooltip("Percentage:Q", format=".2f")]
+                    ).properties(title="Baseline vs Projected (%)", height=240)
+                else:
+                    chart_pct = alt.Chart(df_pct).mark_bar().encode(
+                        x=alt.X("Scenario:N", title=None, axis=alt.Axis(labels=True)),
+                        y=alt.Y("Percentage:Q", scale=alt.Scale(domain=[0, 100]), title="Rate (%)"),
+                        color=alt.Color("Scenario:N", scale=alt.Scale(domain=["Baseline", "Projected"], range=["#94A3B8", "#29B5E8"])),
+                        tooltip=[alt.Tooltip("Metric:N"), alt.Tooltip("Scenario:N"), alt.Tooltip("Percentage:Q", format=".2f")]
+                    ).facet(
+                        column=alt.Column("Metric:N", header=alt.Header(title=None, labelOrient="bottom"))
+                    ).properties(title="Baseline vs Projected (%)")
+                
+                st.altair_chart(chart_pct, use_container_width=True)
+
+            with c_sim2:
+                df_pen = pd.DataFrame([
+                    {"Scenario": "Baseline", "Exposure ($)": float(proj["BASELINE_PENALTY_USD"])},
+                    {"Scenario": "Projected", "Exposure ($)": float(proj["PROJECTED_PENALTY_EXPOSURE_USD"])}
+                ])
+                chart_pen = alt.Chart(df_pen).mark_bar().encode(
+                    x=alt.X("Scenario:N", sort=["Baseline", "Projected"], title=None),
+                    y=alt.Y("Exposure ($):Q", title="Penalty Exposure ($ USD)", axis=alt.Axis(format="$,.0f")),
+                    color=alt.Color("Scenario:N", scale=alt.Scale(domain=["Baseline", "Projected"], range=["#94A3B8", "#10B981"]), legend=None),
+                    tooltip=[alt.Tooltip("Scenario:N"), alt.Tooltip("Exposure ($):Q", format="$,.2f")]
+                ).properties(title="Penalty Exposure (USD)", height=240)
+                st.altair_chart(chart_pen, use_container_width=True)
 
             st.dataframe(sim_res_df, use_container_width=True)
 

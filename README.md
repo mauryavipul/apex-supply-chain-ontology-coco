@@ -76,13 +76,17 @@ Every CoCo step was reviewed before approval; the full step-by-step record with 
 
 ## 6. Screenshots
 
-| Command Center | Ask (governed answer + provenance) |
+| Command Center (risk chart) | Ask (governed answer + provenance) |
 |---|---|
-| ![Command Center](screenshots/32_App_v2_command_center.png) | ![Ask](screenshots/33_App_v2_ask_provenance.png) |
+| ![Command Center](screenshots/38_App_v2_command_center_charts.png) | ![Ask](screenshots/33_App_v2_ask_provenance.png) |
 
-| What-If (illustrative) | v2 CLI tests 8/8 |
+| What-If (illustrative) | Governance health (drift sentinel) |
 |---|---|
-| ![What-If](screenshots/34_App_v2_whatif.png) | ![Tests](screenshots/36_CoCo_CLI_v2_tests_8of8_scorecard.png) |
+| ![What-If](screenshots/41_App_v2_whatif_charts.png) | ![Govern](screenshots/40_App_v2_govern_pill.png) |
+
+| Dark mode | v2 CLI tests 8/8 |
+|---|---|
+| ![Dark mode](screenshots/39_App_v2_command_center_dark.png) | ![Tests](screenshots/36_CoCo_CLI_v2_tests_8of8_scorecard.png) |
 
 More CoCo CLI screenshots (planning, self-correction, phase validations) are in [`screenshots/`](screenshots/).
 
@@ -92,6 +96,7 @@ More CoCo CLI screenshots (planning, self-correction, phase validations) are in 
 app/
   streamlit_app.py      Streamlit in Snowflake app (final v2, 6 pages)
   upload_app.py         Uploads the app file to the Snowflake stage
+  .streamlit/           Theme (accent colour + font; works in light and dark mode)
   prototype/            Prototype app as submitted (Phases 5–6)
 sql/01–23               Build scripts in execution order
 docs/                   Plan, CoCo planning session, test summaries, build journal (PDF), deck
