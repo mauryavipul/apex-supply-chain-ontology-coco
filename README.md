@@ -52,26 +52,26 @@ flowchart LR
 
 | Phase | What CoCo did | Artifacts |
 |---|---|---|
-| Planning | Asked clarifying questions, checked region/model availability, wrote the solution blueprint | `docs/PLAN.md`, `docs/coco_planning_session.md` |
+| Planning | Asked clarifying questions, checked region/model availability, wrote the solution blueprint (Phases 1–6; Phases 7–10 added after the prototype) | `docs/PLAN.md`, `docs/coco_planning_session.md` |
 | 1 – Data | Created warehouse/DB/schemas, generated referentially consistent synthetic data with injected inconsistencies, legacy views; self-corrected SQL errors | `sql/01–04` |
 | 2 – Pipelines | Dynamic tables, inventory position/DOI, stream + tasks, data-quality checks | `sql/05–07` |
 | 3 – Semantic layer | Native semantic view with synonyms, metrics and 10 verified queries | `sql/08–09` |
 | 4 – AI | Cortex Search over contracts, Cortex Agent, validated escalation procedure, persona tests | `sql/10–13` |
-| 5–6 – App v1 | Streamlit app, deployment, CLI test suite **5/5 PASS** | `sql/14–15`, `app/v1/`, `docs/PHASE6_VALIDATION_SUMMARY.md` |
+| 5–6 – Prototype app | Streamlit app, deployment, CLI test suite **5/5 PASS** | `sql/14–15`, `app/prototype/`, `docs/PROTOTYPE_VALIDATION_SUMMARY.md` |
 | 7 – Governance | Metric registry, trust layer, drift sentinel, agent guardrails | `sql/16–19` |
 | 8 – Decisions | Risk signals, recommendation engine, what-if simulator | `sql/20–21` |
 | 9 – App v2 | 6-page control tower, deployed and browser smoke-tested | `sql/22`, `app/streamlit_app.py` |
-| 10 – Testing | v2 CLI validation suite **8/8 PASS** (read-only + negative guardrail test) | `sql/23`, `docs/PHASE9_V2_VALIDATION_SUMMARY.md` |
+| 10 – Testing | v2 CLI validation suite **8/8 PASS** (read-only + negative guardrail test) | `sql/23`, `docs/FINAL_APP_VALIDATION_SUMMARY.md` |
 
-Every CoCo step was reviewed before approval; the full step-by-step record with screenshots is in [`docs/CoCo_Build_Journey.pdf`](docs/CoCo_Build_Journey.pdf).
+Every CoCo step was reviewed before approval; the full step-by-step record with screenshots is in [`docs/CoCo_Build_Journey.pdf`](docs/CoCo_Build_Journey.pdf). Presentation: [`docs/Snow_Build_CoCo_Hackathon_Deck.pdf`](docs/Snow_Build_CoCo_Hackathon_Deck.pdf).
 
 ## 5. Results
 
 | Check | Result |
 |---|---|
 | Persona consistency (3 phrasings → same metric) | 64.12% for all three, via Cortex Agent |
-| v1 CLI test suite | 5 / 5 PASS |
-| v2 CLI test suite (governance, agent, guardrails, risk, what-if, escalation guard, app state) | **8 / 8 PASS** |
+| Prototype CLI test suite | 5 / 5 PASS |
+| Final app (v2) CLI test suite (governance, agent, guardrails, risk, what-if, escalation guard, app state) | **8 / 8 PASS** |
 | Data safety during testing | Actions log unchanged; all scheduled tasks suspended |
 
 ## 6. Screenshots
@@ -90,9 +90,9 @@ More CoCo CLI screenshots (planning, self-correction, phase validations) are in 
 
 ```
 app/
-  streamlit_app.py      Streamlit in Snowflake app (v2, 6 pages)
+  streamlit_app.py      Streamlit in Snowflake app (final v2, 6 pages)
   upload_app.py         Uploads the app file to the Snowflake stage
-  v1/                   Prototype app (v1)
+  prototype/            Prototype app as submitted (Phases 5–6)
 sql/01–23               Build scripts in execution order
 docs/                   Plan, CoCo planning session, test summaries, build journal (PDF), deck
 screenshots/            Selected evidence screenshots

@@ -164,7 +164,7 @@ elif page == "📊 2. Monitor":
         st.subheader("📊 Executive KPI Control Tower")
         st.markdown("Real-time executive metrics across manufacturing plants, suppliers, and customer fulfillment.")
 
-        # Filter row (Preserve v1 logic unchanged)
+        # Filter row (Preserve prototype logic unchanged)
         col_f1, col_f2 = st.columns(2)
         with col_f1:
             plants_df = session.sql("SELECT DISTINCT PLANT_NAME FROM SC_ONTOLOGY.CURATED.DIM_PLANT ORDER BY 1").to_pandas()

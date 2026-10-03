@@ -1,4 +1,6 @@
-# Phase 6 Validation Summary (Passed)
+# Prototype Validation Summary (Passed)
+
+> Validation of the submitted prototype (build Phases 1–6). For the final app (Phases 7–10), see [FINAL_APP_VALIDATION_SUMMARY.md](FINAL_APP_VALIDATION_SUMMARY.md).
 
 Date: 29 Sept 2026  
 Project: Supply Chain Ontology and Governed Conversational Analytics  

@@ -339,6 +339,8 @@ CREATE OR REPLACE SEMANTIC VIEW SEMANTIC.SV_SUPPLY_CHAIN_INTELLIGENCE
 **App Object**: `APP.SUPPLY_CHAIN_CONTROL_TOWER`
 
 #### 6 Dedicated Pages
+*(Prototype page set. The final app reorganizes these into Command Center · Monitor · Ask · Govern · Decide · Act – see Section 13.)*
+
 1. 📊 **Executive Control Tower**: Interactive KPI summary cards (Outbound OTD, Inbound OTIF, Global DOI, Avg Landed Cost) with plant, region, and date range filters.
 2. ⚡ **"Before vs After" Consistency Lab**: Live side-by-side comparison showing how Legacy un-governed queries yield 3 conflicting numbers, whereas the Governed Semantic View outputs a single, trusted truth.
 3. 💬 **Multi-Persona Conversational Studio**: Interactive chat with pre-configured persona buttons (Planner, Procurement, Logistics) demonstrating consistent answers across distinct domain phrasing.
@@ -396,4 +398,33 @@ Each phase is self-contained. Execution will pause after each phase for review a
 | **Total** | **Complete Solution Delivery** | **Zero-Divergence Governed Supply Chain Platform** | **< 0.18 Credits** |
 
 ---
-*Blueprint complete. Awaiting user review and authorization to proceed with Phase 1.*
+
+### 13. Enhancement Phases 7–10: Governance & Decision Platform (Final App)
+
+Added after the prototype submission. All work is additive: Phases 1–6 objects are not re-created, scheduled tasks stay suspended, `APP.ACTIONS` stays at its baseline, and `HACK_WH` stays XSMALL. Execution paused after each phase for review.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Phase 7: Governance Trio (new GOVERNANCE schema)            │
+│ Review & Stop: Registry, provenance tier, drift check, agent│
+├─────────────────────────────────────────────────────────────┤
+│ Phase 8: Prescriptive Decision Center + What-If             │
+│ Review & Stop: Risk signals, 13 recommendations, simulator  │
+├─────────────────────────────────────────────────────────────┤
+│ Phase 9: Streamlit App v2 (6-page control tower)            │
+│ Review & Stop: Deploy + browser smoke test of all 6 pages   │
+├─────────────────────────────────────────────────────────────┤
+│ Phase 10: CoCo CLI Validation Suite (read-only)             │
+│ Final Sign-Off: 8 tests incl. negative guardrail test       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+| Phase | Scope & Deliverables | Verification / Gate | Scripts |
+| :--- | :--- | :--- | :--- |
+| **Phase 7: Governance Trio** | `GOVERNANCE.METRIC_REGISTRY` (8 canonical metrics with formula, owner, source, VQR link); trust layer `V_DATA_FRESHNESS` + `F_METRIC_PROVENANCE` (Verified / Governed-Adhoc / Unverified tiers); drift sentinel `SP_RUN_DRIFT_CHECK` + `V_GOVERNANCE_HEALTH` + `TSK_DRIFT_SENTINEL` (suspended); agent guardrails (one clarifying question for ambiguous metrics, out-of-scope refusal, registry citation). | Provenance for OTD = Verified; drift check ALIGNED (canonical 64.12% vs legacy 83.51 / 96.65 / 64.12); 3 persona questions still return 64.12%. | `sql/16–19` |
+| **Phase 8: Decision Center** | `APP.V_RISK_SIGNALS` (supplier + carrier risk score 0–100), `APP.V_RECOMMENDATION_CANDIDATES`, `APP.SP_GENERATE_RECOMMENDATIONS` → `APP.RECOMMENDATIONS`; illustrative what-if table function `APP.F_WHATIF_PROJECTION` driven by `APP.SIM_COEFFICIENTS`. | 38 risk signals (top SUP-104); CARR-01/03/07 flagged, CARR-04 not; 13 PROPOSED recommendations; what-if 64.12% → 68.37% OTD, net cost +USD 36,625. | `sql/20–21` |
+| **Phase 9: App v2** | `APP.SUPPLY_CHAIN_CONTROL_TOWER` redeployed with 6 pages: Command Center, Monitor (KPIs, Before-vs-After), Ask (agent chat + provenance badge + guardrails), Govern (Health, Glossary from registry, Ontology), Decide (Recommendations, What-If), Act (governed escalation). | App deployed on `HACK_WH`; browser smoke test 6/6 pages; UI fixes redeployed and re-verified. | `sql/22`, `app/streamlit_app.py` |
+| **Phase 10: Validation** | Read-only CoCo CLI test suite covering governance, drift, persona consistency, guardrails, risk, what-if, escalation guard and app/safety state. | **8 / 8 PASS**; `APP.ACTIONS` unchanged; all 3 tasks suspended. | `sql/23`, `docs/FINAL_APP_VALIDATION_SUMMARY.md` |
+
+---
+*Phases 1–6 were planned with CoCo before the build (prototype). Section 13 documents Phases 7–10, planned and built after the prototype submission.*
