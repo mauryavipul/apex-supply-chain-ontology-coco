@@ -5,6 +5,11 @@
 > One trusted answer → continuously defended → simulated & prescribed → acted on.
 > Built end-to-end with **Snowflake Cortex Code (CoCo) CLI** – planning, development, execution and testing.
 
+| | |
+|---|---|
+| 🎬 **Demo video** | [Watch on Google Drive](https://drive.google.com/file/d/1cfdt2-JZBPlOPn7iv5BbIJnSr7AXEd9F/view?usp=drive_link) |
+| 🚀 **Live app** | [SC_ONTOLOGY.APP.SUPPLY_CHAIN_CONTROL_TOWER](https://app.snowflake.com/zhsbcwu/tn70880/#/streamlit-apps/SC_ONTOLOGY.APP.SUPPLY_CHAIN_CONTROL_TOWER) – Streamlit in Snowflake; requires Snowflake account access (reviewer login available on request). See [screenshots](#6-screenshots) and the [deck](docs/Snow_Build_CoCo_Hackathon_Deck.pdf). |
+
 ---
 
 ## 1. The problem
