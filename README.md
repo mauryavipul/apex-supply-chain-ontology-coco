@@ -9,6 +9,7 @@
 |---|---|
 | 🎬 **Demo video** | [Watch on Google Drive](https://drive.google.com/file/d/1cfdt2-JZBPlOPn7iv5BbIJnSr7AXEd9F/view?usp=drive_link) |
 | 🚀 **Live app** | [SC_ONTOLOGY.APP.SUPPLY_CHAIN_CONTROL_TOWER](https://app.snowflake.com/zhsbcwu/tn70880/#/streamlit-apps/SC_ONTOLOGY.APP.SUPPLY_CHAIN_CONTROL_TOWER) – Streamlit in Snowflake; requires Snowflake account access (reviewer login available on request). See [screenshots](#6-screenshots) and the [deck](docs/Snow_Build_CoCo_Hackathon_Deck.pdf). |
+| 📘 **User manual** | [docs/USER_MANUAL.md](docs/USER_MANUAL.md) – page-by-page guide to every metric, table, chart and button in the app |
 
 ---
 
@@ -104,7 +105,7 @@ app/
   .streamlit/           Theme (accent colour + font; works in light and dark mode)
   prototype/            Prototype app as submitted (Phases 5–6)
 sql/01–23               Build scripts in execution order
-docs/                   Plan, CoCo planning session, test summaries, build journal (PDF), deck
+docs/                   Plan, user manual, CoCo planning session, test summaries, build journal (PDF), deck
 screenshots/            Selected evidence screenshots
 ```
 
