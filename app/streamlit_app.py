@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import altair as alt
 from snowflake.snowpark.context import get_active_session
+_rerun = getattr(st, "rerun", None) or st.experimental_rerun
 
 # Set Streamlit page config
 st.set_page_config(
@@ -412,16 +413,18 @@ elif page == "💬 3. Ask":
         "Logistics": "What percentage of delivered order lines met the promised date for orders placed in Q3 2026?"
     }
 
-    col_btn1, col_btn2, col_btn3 = st.columns(3)
-    p_choice = None
-    if col_btn1.button("📋 Planner Persona Question"):
-        p_choice = PERSONA_QUESTIONS["Planner"]
-    if col_btn2.button("📦 Procurement Persona Question"):
-        p_choice = PERSONA_QUESTIONS["Procurement"]
-    if col_btn3.button("🚚 Logistics Persona Question"):
-        p_choice = PERSONA_QUESTIONS["Logistics"]
+    if "ask_q" not in st.session_state:
+        st.session_state["ask_q"] = PERSONA_QUESTIONS["Planner"]
 
-    user_query = st.text_input("Enter a supply chain question:", value=p_choice or PERSONA_QUESTIONS["Planner"])
+    col_btn1, col_btn2, col_btn3 = st.columns(3)
+    if col_btn1.button("📋 Planner Persona Question"):
+        st.session_state["ask_q"] = PERSONA_QUESTIONS["Planner"]
+    if col_btn2.button("📦 Procurement Persona Question"):
+        st.session_state["ask_q"] = PERSONA_QUESTIONS["Procurement"]
+    if col_btn3.button("🚚 Logistics Persona Question"):
+        st.session_state["ask_q"] = PERSONA_QUESTIONS["Logistics"]
+
+    user_query = st.text_input("Enter a supply chain question:", key="ask_q")
 
     if st.button("🚀 Ask Cortex Agent", type="primary"):
         with st.spinner("Submitting query to SC_ONTOLOGY_AGENT via DATA_AGENT_RUN..."):
@@ -548,6 +551,8 @@ elif page == "💬 3. Ask":
 elif page == "🛡️ 4. Govern":
     st.header("🛡️ Metric Governance & Lineage")
     st.caption("Semantic drift monitoring, canonical metric glossary, and knowledge graph architecture.")
+    # Spacer gives this page's st.tabs a unique position so the selected tab doesn't carry over between pages.
+    st.empty()
     tab_gov, tab_glo, tab_ont = st.tabs(["🛡️ Governance Health", "📖 Metric Glossary", "🕸️ Ontology & Lineage"])
 
     with tab_gov:
@@ -571,7 +576,7 @@ elif page == "🛡️ 4. Govern":
             with st.spinner("Executing GOVERNANCE.SP_RUN_DRIFT_CHECK()..."):
                 drift_res = session.sql("CALL SC_ONTOLOGY.GOVERNANCE.SP_RUN_DRIFT_CHECK()").collect()[0][0]
                 st.session_state["drift_flash_msg"] = f"Drift Check Result: {drift_res}"
-                st.rerun()
+                _rerun()
 
     with tab_glo:
         st.subheader("📖 Governed Canonical Metric Glossary")
@@ -634,6 +639,9 @@ elif page == "🛡️ 4. Govern":
 elif page == "💡 5. Decide":
     st.header("💡 Prescriptive Decision Center")
     st.caption("Active risk signals, candidate recommendations, and what-if prescriptive intervention simulator.")
+    # Spacers give this page's st.tabs a unique position so the selected tab doesn't carry over between pages.
+    st.empty()
+    st.empty()
     tab_rec, tab_sim = st.tabs(["💡 Prescriptive Recommendations", "🧪 What-If Simulation Lab"])
 
     with tab_rec:
@@ -662,7 +670,7 @@ elif page == "💡 5. Decide":
                 with st.spinner("Running APP.SP_GENERATE_RECOMMENDATIONS()..."):
                     gen_res = session.sql("CALL SC_ONTOLOGY.APP.SP_GENERATE_RECOMMENDATIONS()").collect()[0][0]
                     st.session_state["rec_flash_msg"] = gen_res
-                    st.rerun()
+                    _rerun()
 
         risk_signals_df = session.sql("""
             SELECT 
@@ -748,7 +756,7 @@ elif page == "💡 5. Decide":
                             esc_desc[:950]
                         ]).collect()[0][0]
                         st.session_state["esc_flash_msg"] = esc_res
-                        st.rerun()
+                        _rerun()
 
     with tab_sim:
         st.header("🧪 Prescriptive What-If Simulation Lab")
@@ -896,4 +904,4 @@ elif page == "🚨 6. Act":
                 sp_sql = "CALL SC_ONTOLOGY.APP.SP_CREATE_ACTION_ITEM(?, ?, ?, ?, ?)"
                 res = session.sql(sp_sql, params=[f_action_type, f_entity_type, f_entity_id, sev_clean, f_description]).collect()[0][0]
                 st.session_state["act_flash_msg"] = res
-                st.rerun()
+                _rerun()
